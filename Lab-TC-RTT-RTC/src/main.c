@@ -280,6 +280,8 @@ int main (void)
 	rtc_set_time_alarm(RTC, 1, rtc_initial.hour, 1, rtc_initial.minute, 1, rtc_initial.seccond + 5);
 	
 	while(1) {
+		pmc_sleep(SAM_PM_SMODE_SLEEP_WFI);
+		
 		if(flag_tc){
 			pin_toggle(LED1_PIO, LED1_IDX_MASK);
 			flag_tc = 0;
