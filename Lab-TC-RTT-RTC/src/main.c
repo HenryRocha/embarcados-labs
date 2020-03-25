@@ -56,6 +56,7 @@ volatile char flag_tc = 0;
 volatile char flag_tc0 = 0;
 volatile Bool f_rtt_alarme = false;
 volatile char flag_rtc = 0;
+volatile char flag_rtc_second = 0;
 
 /************************************************************************/
 /* Prototype Functions
@@ -117,6 +118,16 @@ void RTC_Handler(void)
 	if ((ul_status & RTC_SR_ALARM) == RTC_SR_ALARM) {
 			rtc_clear_status(RTC, RTC_SCCR_ALRCLR);
       flag_rtc = 1;
+	}
+	
+	if ((ul_status & RTC_SR_SEC) == RTC_SR_SEC) {
+
+		//
+		//  Entrou por segundo!
+		//
+		rtc_clear_status(RTC, RTC_SCCR_SECCLR);
+		
+		flag_rtc_second = 1;
 	}
 	
 	rtc_clear_status(RTC, RTC_SCCR_ACKCLR);
@@ -273,11 +284,19 @@ int main (void)
 	TC_init(TC0, ID_TC0, 0, 5);
 	
 	/** Configura RTC */
-	calendar rtc_initial = {2018, 3, 19, 12, 15, 45 ,1};
-	RTC_init(RTC, ID_RTC, rtc_initial, RTC_IER_ALREN);
+	calendar rtc_initial = {2018, 3, 19, 12, 15, 45 , 1};
+		
+	RTC_init(RTC, ID_RTC, rtc_initial, RTC_IER_ALREN | RTC_IER_SECEN);
 	/* configura alarme do RTC */
 	rtc_set_date_alarm(RTC, 1, rtc_initial.month, 1, rtc_initial.day);
-	rtc_set_time_alarm(RTC, 1, rtc_initial.hour, 1, rtc_initial.minute, 1, rtc_initial.seccond + 5);
+	rtc_set_time_alarm(RTC, 1, rtc_initial.hour, 1, rtc_initial.minute, 1, rtc_initial.seccond + 20);
+	rtc_set_hour_mode(RTC, 0);
+	
+	// Time stuff
+	uint32_t hour;
+	uint32_t minute;
+	uint32_t second;
+	char timeBuffer[512];
 	
 	while(1) {
 		pmc_sleep(SAM_PM_SMODE_SLEEP_WFI);
@@ -293,7 +312,6 @@ int main (void)
 		}
 		
 		if (f_rtt_alarme){
-      
 			/*
 			 * IRQ apos 4s -> 8*0.5
 			 */
@@ -309,6 +327,15 @@ int main (void)
 		if(flag_rtc){
 			pisca_led(5, 100);
 			flag_rtc = 0;
+		}
+		
+		if(flag_rtc_second) {			
+			rtc_get_time(RTC, &hour, &minute, &second);
+			
+			sprintf(timeBuffer, "%2d:%2d:%2d", hour, minute, second);
+			
+			gfx_mono_draw_string(timeBuffer, 50, 16, &sysfont);
+			flag_rtc_second = 0;
 		}
 	}
 }
