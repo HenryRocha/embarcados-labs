@@ -54,6 +54,7 @@ typedef struct {
 	uint32_t x;         // posicao x
 	uint32_t y;         // posicao y
 	uint8_t status;
+	void (*callback)(t_but);
 } t_but;
 
 QueueHandle_t xQueueTouch;
@@ -70,9 +71,7 @@ QueueHandle_t xQueueTouch;
 /**
 * \brief Called if stack overflow during execution
 */
-extern void vApplicationStackOverflowHook(xTaskHandle *pxTask,
-signed char *pcTaskName)
-{
+extern void vApplicationStackOverflowHook(xTaskHandle *pxTask, signed char *pcTaskName) {
   printf("stack overflow %x %s\r\n", pxTask, (portCHAR *)pcTaskName);
   /* If the parameters have been corrupted then inspect pxCurrentTCB to
   * identify which task has overflowed its stack.
@@ -84,20 +83,17 @@ signed char *pcTaskName)
 /**
 * \brief This function is called by FreeRTOS idle task
 */
-extern void vApplicationIdleHook(void)
-{
+extern void vApplicationIdleHook(void) {
   pmc_sleep(SAM_PM_SMODE_SLEEP_WFI);
 }
 
 /**
 * \brief This function is called by FreeRTOS each tick
 */
-extern void vApplicationTickHook(void)
-{
+extern void vApplicationTickHook(void) {
 }
 
-extern void vApplicationMallocFailedHook(void)
-{
+extern void vApplicationMallocFailedHook(void) {
   /* Called if a call to pvPortMalloc() fails because there is insufficient
   free memory available in the FreeRTOS heap.  pvPortMalloc() is called
   internally by FreeRTOS API functions that create tasks, queues, software
@@ -112,7 +108,7 @@ extern void vApplicationMallocFailedHook(void)
 /* init                                                                 */
 /************************************************************************/
 
-static void configure_lcd(void){
+static void configure_lcd(void) {
   /* Initialize display parameter */
   g_ili9488_display_opt.ul_width = ILI9488_LCD_WIDTH;
   g_ili9488_display_opt.ul_height = ILI9488_LCD_HEIGHT;
@@ -243,6 +239,20 @@ void mxt_handler(struct mxt_device *device, uint *x, uint *y)
   } while ((mxt_is_message_pending(device)) & (i < MAX_ENTRIES));
 }
 
+void but0_cb(t_but *but) {
+	but->status = !but->status;
+	draw_button_new(*but);
+}
+
+void but1_cb(t_but *but) {
+	but->status = !but->status;
+	draw_button_new(*but);
+}
+
+void but2_cb(t_but *but) {
+	but->status = !but->status;
+	draw_button_new(*but);
+}
 /************************************************************************/
 /* tasks                                                                */
 /************************************************************************/
@@ -306,17 +316,17 @@ void task_lcd(void){
 
 	t_but but0 = {.width = 120, .height = 75, .border = 2,
 		.colorOn = COLOR_TOMATO, .colorOff = COLOR_BLACK,
-	.x = ILI9488_LCD_WIDTH/2, .y = 40, .status = 1};
+	.x = ILI9488_LCD_WIDTH/2, .y = 40, .status = 1, .callback = &but0_cb};
 	draw_button_new(but0);
 	
 	t_but but1 = {.width = 120, .height = 75, .border = 2,
 		.colorOn = COLOR_GREEN, .colorOff = COLOR_BLACK,
-	.x = ILI9488_LCD_WIDTH/2, .y = 140, .status = 1};
+	.x = ILI9488_LCD_WIDTH/2, .y = 140, .status = 1, .callback = &but1_cb};
 	draw_button_new(but1);
 	
 	t_but but2 = {.width = 120, .height = 75, .border = 2,
 		.colorOn = COLOR_GREEN, .colorOff = COLOR_BLACK,
-	.x = ILI9488_LCD_WIDTH/2, .y = 240, .status = 1};
+	.x = ILI9488_LCD_WIDTH/2, .y = 240, .status = 1, .callback = &but2_cb};
 	draw_button_new(but2);
 
 	t_but botoes[] = {but0, but1, but2};
@@ -336,8 +346,9 @@ void task_lcd(void){
 			int b = process_touch(botoes, touch, 3);
 			printf("b: %d\n", b);
 			if (b >= 0) {
-				botoes[b].status = !botoes[b].status;
-				draw_button_new(botoes[b]);
+				botoes[b].callback(&botoes[b]);
+				//botoes[b].status = !botoes[b].status;
+				//draw_button_new(botoes[b]);
 			}
 			printf("x:%d y:%d\n", touch.x, touch.y);
 		}
@@ -348,8 +359,7 @@ void task_lcd(void){
 /* main                                                                 */
 /************************************************************************/
 
-int main(void)
-{
+int main(void) {
   /* Initialize the USART configuration struct */
   const usart_serial_options_t usart_serial_options = {
     .baudrate     = USART_SERIAL_EXAMPLE_BAUDRATE,
