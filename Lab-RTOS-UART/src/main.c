@@ -1,4 +1,5 @@
 #include <asf.h>
+#include <string.h>
 #include "conf_board.h"
 
 #define TASK_MONITOR_STACK_SIZE (2048 / sizeof(portSTACK_TYPE))
@@ -380,7 +381,7 @@ static void configure_console(void)
 static void task_uartRX(void *pvParameters)
 {
 	char rxMSG;
-	char msgBuffer[64];
+	char msgBuffer[64] = {0};
 	int i = 0;
 
 	xQueueRx = xQueueCreate(32, sizeof(char));
@@ -398,7 +399,9 @@ static void task_uartRX(void *pvParameters)
 			}
 			else
 			{
+				msgBuffer[i] = 0;
 				xQueueSend(xQueueCommand, &msgBuffer, 0);
+				i = 0;
 			}
 		}
 	}
@@ -408,12 +411,18 @@ static void task_execute(void *pvParameters)
 {
 	char msgBuffer[64];
 
+	xQueueCommand = xQueueCreate(5, sizeof(char[64]));
+
 	while (1)
 	{
-		// if (xQueueReceive(xQueueCommand, &msgBuffer, (TickType_t)500))
-		// {
-		// 	printf("comando: %s\n", msgBuffer);
-		// }
+		if (xQueueReceive(xQueueCommand, &msgBuffer, (TickType_t)500))
+		{
+			printf("comando: %s\n", msgBuffer);
+			
+			if (strcmp(msgBuffer, "olar") == 0) {
+				printf("comando olar recebido!");
+			}
+		}
 	}
 }
 
