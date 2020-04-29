@@ -420,7 +420,7 @@ static void task_execute(void *pvParameters)
 			printf("comando: %s\n", msgBuffer);
 			
 			if (strcmp(msgBuffer, "olar") == 0) {
-				printf("comando olar recebido!");
+				printf("comando olar recebido!\n");
 			}
 		}
 	}
