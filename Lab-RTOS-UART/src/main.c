@@ -373,8 +373,8 @@ static void configure_console(void)
 		setbuf(stdout, NULL);
 	#else
 		/* Already the case in IAR's Normal DLIB default configuration: printf()
-						* emits one character at a time.
-						*/
+							* emits one character at a time.
+							*/
 	#endif
 }
 
@@ -418,12 +418,14 @@ static void task_execute(void *pvParameters)
 		if (xQueueReceive(xQueueCommand, &msgBuffer, (TickType_t)500))
 		{
 			printf("comando: %s\n", msgBuffer);
-			
-			if (strcmp(msgBuffer, "led 1 toggle") == 0) {
+
+			if (strcmp(msgBuffer, "led 1 toggle") == 0)
+			{
 				pin_toggle(LED1_PIO, LED1_IDX_MASK);
 			}
-			
-			if (strcmp(msgBuffer, "led 3 toggle") == 0) {
+
+			if (strcmp(msgBuffer, "led 3 toggle") == 0)
+			{
 				pin_toggle(LED3_PIO, LED3_IDX_MASK);
 			}
 		}
