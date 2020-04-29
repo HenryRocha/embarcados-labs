@@ -419,8 +419,12 @@ static void task_execute(void *pvParameters)
 		{
 			printf("comando: %s\n", msgBuffer);
 			
-			if (strcmp(msgBuffer, "olar") == 0) {
-				printf("comando olar recebido!\n");
+			if (strcmp(msgBuffer, "led 1 toggle") == 0) {
+				pin_toggle(LED1_PIO, LED1_IDX_MASK);
+			}
+			
+			if (strcmp(msgBuffer, "led 3 toggle") == 0) {
+				pin_toggle(LED3_PIO, LED3_IDX_MASK);
 			}
 		}
 	}
