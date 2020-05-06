@@ -16,7 +16,7 @@
 /************************************************************************/
 /* RTOS                                                                  */
 /************************************************************************/
-#define NUM_TAPS 8    // ordem do filtro (quantos coefientes)
+#define NUM_TAPS 12    // ordem do filtro (quantos coefientes)
 #define BLOCK_SIZE 1  // se será processado por blocos, no caso não.
 
 #define TASK_MXT_STACK_SIZE (2 * 1024 / sizeof(portSTACK_TYPE))
@@ -339,14 +339,28 @@ void task_adc(void) {
     config_AFEC_pot(AFEC_POT, AFEC_POT_ID, AFEC_POT_CHANNEL, AFEC_pot_Callback);
     TC_init(TC0, ID_TC1, 1, 100);
 
-    const float32_t firCoeffs32[NUM_TAPS] = {0.12269166637219883,
-                                             0.12466396327768503,
-                                             0.1259892807712678,
-                                             0.12665508957884833,
-                                             0.12665508957884833,
-                                             0.1259892807712678,
-                                             0.12466396327768503,
-                                             0.12269166637219883};
+    // const float32_t firCoeffs32[NUM_TAPS] = {0.12269166637219883,
+    //                                          0.12466396327768503,
+    //                                          0.1259892807712678,
+    //                                          0.12665508957884833,
+    //                                          0.12665508957884833,
+    //                                          0.1259892807712678,
+    //                                          0.12466396327768503,
+    //                                          0.12269166637219883};
+
+    const float32_t firCoeffs32[NUM_TAPS] = {
+        0.07930125683894955,
+        0.08147535648783032,
+        0.08323976516671625,
+        0.08457786363832452,
+        0.08547702101550535,
+        0.085928736852674,
+        0.085928736852674,
+        0.08547702101550535,
+        0.08457786363832452,
+        0.08323976516671625,
+        0.08147535648783032,
+        0.07930125683894955};
 
     /* Cria buffers para filtragem e faz a inicializacao do filtro. */
     float32_t firStateF32[BLOCK_SIZE + NUM_TAPS - 1];
