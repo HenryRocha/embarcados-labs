@@ -78,6 +78,11 @@ extern void vApplicationMallocFailedHook(void) { configASSERT((volatile void *)N
 /* funcoes                                                              */
 /************************************************************************/
 
+void get_path(char *buffer, char endpoint[]) {
+    // Formata o buffer dado com o endpoint que deseja mandar o GET.
+    sprintf(buffer, "GET %s HTTP/1.1\r\n Accept: */*\r\n\r\n", endpoint);
+}
+
 /************************************************************************/
 /* callbacks                                                            */
 /************************************************************************/
@@ -238,7 +243,8 @@ static void task_process(void *pvParameters) {
 
             case GET:
                 printf("STATE: GET \n");
-                sprintf((char *)g_sendBuffer, MAIN_PREFIX_BUFFER);
+                // sprintf((char *)g_sendBuffer, MAIN_PREFIX_BUFFER);
+                get_path(&g_sendBuffer, "/status");
                 send(tcp_client_socket, g_sendBuffer, strlen((char *)g_sendBuffer), 0);
                 state = ACK;
                 break;
