@@ -50,6 +50,9 @@ static char server_host_name[] = MAIN_SERVER_NAME;
 SemaphoreHandle_t xSemaphore;
 QueueHandle_t xQueueMsg;
 
+// Semáforo dos botões
+SemaphoreHandle_t xSemaphoreButPlaca;
+
 extern void vApplicationStackOverflowHook(xTaskHandle *pxTask, signed char *pcTaskName);
 extern void vApplicationIdleHook(void);
 extern void vApplicationTickHook(void);
@@ -205,6 +208,13 @@ static void wifi_cb(uint8_t u8MsgType, void *pvMsg) {
     }
 }
 
+void *but_placa_callback(void *_args) {
+    // Libera o semáforo xSemaphoreButPlaca
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    xSemaphoreGiveFromISR(xSemaphoreButPlaca, &xHigherPriorityTaskWoken);
+    printf("ButPlaca callback, xSemaphoreButPlaca cleared\r\n");
+}
+
 /************************************************************************/
 /* TASKS                                                                */
 /************************************************************************/
@@ -213,8 +223,20 @@ static void task_process(void *pvParameters) {
     printf("task process created \n");
     vTaskDelay(1000);
 
+    // Variável local para guardar o status do LED.
+    unsigned short int led_status = 0;
+
     // Configura e inicializa o LED da placa como desligado.
-    setup_led(0, 0);
+    setup_led(0, led_status);
+
+    // Cria o semáforo do botão SW0.
+    xSemaphoreButPlaca = xSemaphoreCreateBinary();
+
+    // Verificando se o semáforo foi criado com sucesso.
+    if (xSemaphoreButPlaca == NULL) printf("Falha ao criar xSemaphoreButPlay\n");
+
+    // Configurando o botão SW0 (da placa ATMEL SAME70 XPLAINED).
+    setup_but(0, PIO_PULLUP | PIO_DEBOUNCE, PIO_IT_RISE_EDGE, but_placa_callback);
 
     uint msg_counter = 0;
     tstrSocketRecvMsg *p_recvMsg;
@@ -282,7 +304,7 @@ static void task_process(void *pvParameters) {
                     location = strstr(p_recvMsg->pu8Buffer, needle);
 
                     // Transforma o status para int.
-                    int led_status = atoi(&location[7]);
+                    led_status = atoi(&location[7]);
 
                     // Lida/desliga o LED de acordo com o status recebido.
                     switch_led(0, led_status);
@@ -305,6 +327,12 @@ static void task_process(void *pvParameters) {
 
             default:
                 state = WAIT;
+        }
+
+        if (xSemaphoreTake(xSemaphoreButPlaca, (TickType_t)500 / portTICK_PERIOD_MS) == pdTRUE) {
+            // Quando o semáforo do botão é liberado, ou seja, quando o botão é pressionado.
+            led_status = !led_status;
+            switch_led(0, led_status);
         }
     }
 }

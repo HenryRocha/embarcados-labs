@@ -109,7 +109,7 @@ void setup_led(short int led, short int initialState) {
     }
 }
 
-void setup_but(short int but, unsigned int pinAttributes, unsigned int edge, void (*callback)(unsigned int, unsigned int)) {
+void setup_but(short int but, unsigned int pinAttributes, unsigned int edge, void *(*callback)(void *)) {
     switch (but) {
         case 0:
             // BUT PLACA
